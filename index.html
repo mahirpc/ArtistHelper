@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>ArtRef Studio — Grid &amp; Reference Drawing Assistant</title>
+<meta name="description" content="A privacy-first, offline-capable drawing reference tool: grids, value studies, sighting tools, and paper calibration — all client-side." />
+<meta name="theme-color" content="#1b1a18" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital@1&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- ============ SKIP LINK ============ -->
+<a class="skip-link" href="#viewport">Skip to canvas</a>
+
+<div class="app" id="app">
+
+  <!-- ============ HEADER ============ -->
+  <header class="header">
+    <div class="header__brand">
+      <button class="icon-btn header__menu" id="btnToggleToolbox" aria-label="Toggle toolbox" aria-expanded="true">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <svg class="header__mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="3" y="3" width="26" height="26" rx="1"/>
+        <path d="M3 12.3h26M3 20.6h26M12.3 3v26M20.6 3v26" stroke-width="1"/>
+        <path d="M3 3l26 26" stroke-width="1" opacity="0.55"/>
+      </svg>
+      <div class="header__title">
+        <span class="header__name">ArtRef Studio</span>
+        <span class="header__tag">grid &amp; reference assistant</span>
+      </div>
+    </div>
+
+    <div class="header__actions">
+      <label class="btn btn--accent" for="fileInput">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12m0-12 5 5m-5-5-5 5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span>Import</span>
+      </label>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/avif" hidden />
+
+      <div class="header__quick">
+        <button class="icon-btn" id="btnFit" title="Fit to window (0)" aria-label="Fit to window"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button class="icon-btn" id="btnFlipH" title="Flip horizontal (H)" aria-label="Flip horizontal"><svg viewBox="0 0 24 24"><path d="M12 3v18M7 7l-4 5 4 5M17 7l4 5-4 5"/></svg></button>
+        <button class="icon-btn" id="btnFlipV" title="Flip vertical (V)" aria-label="Flip vertical"><svg viewBox="0 0 24 24"><path d="M3 12h18M7 7l5-4 5 4M7 17l5 4 5-4"/></svg></button>
+        <button class="icon-btn" id="btnGray" title="Grayscale toggle (M)" aria-label="Toggle grayscale"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg></button>
+      </div>
+
+      <button class="btn" id="btnRecent">
+        <svg viewBox="0 0 24 24"><path d="M12 7v5l3 3M12 3a9 9 0 1 0 9 9"/></svg>
+        <span>Recent</span>
+      </button>
+      <button class="btn" id="btnExport">
+        <svg viewBox="0 0 24 24"><path d="M12 15V3m0 12-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span>Export</span>
+      </button>
+      <button class="icon-btn" id="btnHelp" title="Keyboard shortcuts &amp; help" aria-label="Help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.5 1-1.5 2.2M12 17.5h.01"/></svg></button>
+    </div>
+  </header>
+
+  <div class="workarea">
+
+    <!-- ============ LEFT TOOLBOX ============ -->
+    <nav class="toolbox" id="toolbox" aria-label="Tools">
+      <button class="tool-btn is-active" data-tool="pan" title="Select / Pan (Space)" aria-label="Pan tool">
+        <svg viewBox="0 0 24 24"><path d="M8 13V4.5a1.5 1.5 0 0 1 3 0V12m0-8.5v-1a1.5 1.5 0 0 1 3 0v1M14 3.5v9m0-9a1.5 1.5 0 0 1 3 0v9M17 8.5a1.5 1.5 0 0 1 3 0V15c0 4-2.5 7-6.5 7h-1C9 22 7 20 5.5 17.5L3 12.8c-.5-1 0-2 1-2.3.7-.2 1.4 0 1.8.7L8 14"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="crop" title="Crop" aria-label="Crop tool">
+        <svg viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14M2 6h14a2 2 0 0 1 2 2v14"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="loupe" title="Color eyedropper" aria-label="Eyedropper tool">
+        <svg viewBox="0 0 24 24"><path d="m2 22 1-4 12-12 3 3-12 12-4 1Z M14 5l3-3 3 3-3 3"/></svg>
+      </button>
+      <div class="tool-divider" role="separator"></div>
+      <button class="tool-btn" data-tool="caliper" title="Virtual caliper (C)" aria-label="Caliper tool">
+        <svg viewBox="0 0 24 24"><path d="M4 20 20 4M4 20l3-1M4 20l1-3M20 4l-3 1M20 4l-1 3M9 15l2-2M13 11l2-2"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="plumb" title="Plumb lines (L)" aria-label="Plumb line tool">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M2 8h20M2 16h20"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="angle" title="Angle finder" aria-label="Angle finder tool">
+        <svg viewBox="0 0 24 24"><path d="M4 20h16M4 20 16 6M4 20l14-3"/></svg>
+      </button>
+      <div class="tool-spacer"></div>
+      <button class="tool-btn" data-tool="rotate-l" title="Rotate 90° left" aria-label="Rotate left">
+        <svg viewBox="0 0 24 24"><path d="M4 9a8 8 0 1 1 1.5 8M4 9V3M4 9h6"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="rotate-r" title="Rotate 90° right" aria-label="Rotate right">
+        <svg viewBox="0 0 24 24"><path d="M20 9a8 8 0 1 0-1.5 8M20 9V3M20 9h-6"/></svg>
+      </button>
+    </nav>
+
+    <!-- ============ CENTER VIEWPORT ============ -->
+    <main class="viewport" id="viewport" tabindex="-1">
+      <div class="viewport__stage" id="stage">
+        <canvas id="baseCanvas" class="layer layer--base"></canvas>
+        <canvas id="overlayCanvas" class="layer layer--overlay"></canvas>
+        <div class="empty-state" id="emptyState">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="1"/><path d="M6 20.7h52M6 33.3h52M6 46h52M20.7 6v52M33.3 6v52M46 6v52" stroke-width="0.75" opacity="0.5"/><circle cx="24" cy="24" r="5"/><path d="m10 50 14-14 8 8 12-16 20 22"/></svg>
+          <p>Drop a reference image, paste from clipboard, or <label for="fileInput" class="link-btn">choose a file</label></p>
+          <p class="empty-state__hint">JPEG · PNG · WEBP · AVIF, up to 50MB — processed entirely in this browser</p>
+        </div>
+      </div>
+      <div class="hud" id="hud" hidden>
+        <span id="hudZoom">100%</span>
+        <span id="hudCoords">x — · y —</span>
+        <span id="hudDims">— × —</span>
+      </div>
+    </main>
+
+    <!-- ============ RIGHT INSPECTOR ============ -->
+    <aside class="inspector" id="inspector" aria-label="Inspector">
+      <div class="inspector__tabs" role="tablist">
+        <button class="itab is-active" role="tab" data-panel="panel-grid">Grid</button>
+        <button class="itab" role="tab" data-panel="panel-tone">Value &amp; Tone</button>
+        <button class="itab" role="tab" data-panel="panel-paper">Paper</button>
+        <button class="itab" role="tab" data-panel="panel-measure">Measure</button>
+      </div>
+
+      <!-- ---- TAB A: GRID ---- -->
+      <section class="ipanel is-active" id="panel-grid" role="tabpanel">
+        <div class="field">
+          <label for="gridType">Overlay type</label>
+          <select id="gridType">
+            <option value="none">None</option>
+            <option value="cartesian" selected>Square / Cartesian grid</option>
+            <option value="rowcol">Row &amp; column grid</option>
+            <option value="harmonic">Harmonic armature</option>
+            <option value="thirds">Rule of thirds</option>
+            <option value="golden">Golden ratio (phi + spiral)</option>
+            <option value="perspective1">Perspective — 1 point</option>
+            <option value="perspective2">Perspective — 2 point</option>
+            <option value="loomis">Loomis face guides</option>
+          </select>
+        </div>
+        <div class="field-row" id="gridDivRow">
+          <div class="field">
+            <label for="gridCols">Columns</label>
+            <input type="number" id="gridCols" min="1" max="64" value="8" />
+          </div>
+          <div class="field">
+            <label for="gridRows">Rows</label>
+            <input type="number" id="gridRows" min="1" max="64" value="8" />
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" id="gridLockSquare" checked />
+          <span>Lock square cells</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="gridDiagonals" />
+          <span>Cell subdivision (X-in-box)</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="gridLabels" />
+          <span>Coordinate labels</span>
+        </label>
+        <select id="labelPosition" class="field" style="margin-top:-4px">
+          <option value="edge">Labels on outer edge</option>
+          <option value="cell_top_left">Labels in each cell</option>
+        </select>
+
+        <hr class="rule" />
+
+        <div class="field">
+          <label for="gridColor">Line color</label>
+          <div class="swatch-row">
+            <input type="color" id="gridColor" value="#f2c14e" />
+            <button class="chip" data-color="#ffffff" style="--c:#ffffff">White</button>
+            <button class="chip" data-color="#0a0a0a" style="--c:#0a0a0a">Black</button>
+            <button class="chip" data-color="#5ad1e6" style="--c:#5ad1e6">Cyan</button>
+            <button class="chip" data-color="#ff3fd8" style="--c:#ff3fd8">Magenta</button>
+            <button class="chip" data-color="#b6ff3f" style="--c:#b6ff3f">Lime</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="gridWidth">Stroke width — <span id="gridWidthVal">1.5</span>px</label>
+          <input type="range" id="gridWidth" min="1" max="10" step="0.5" value="1.5" />
+        </div>
+        <div class="field">
+          <label for="gridOpacity">Opacity — <span id="gridOpacityVal">85</span>%</label>
+          <input type="range" id="gridOpacity" min="0" max="100" value="85" />
+        </div>
+        <div class="field">
+          <label for="gridDash">Line pattern</label>
+          <select id="gridDash">
+            <option value="solid">Solid</option>
+            <option value="dashed">Dashed</option>
+            <option value="dotted">Dotted</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- ---- TAB B: VALUE & TONE ---- -->
+      <section class="ipanel" id="panel-tone" role="tabpanel">
+        <label class="check">
+          <input type="checkbox" id="toneGrayscale" />
+          <span>Grayscale (M)</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="toneInvert" />
+          <span>Invert values</span>
+        </label>
+        <div class="field">
+          <label for="toneBrightness">Brightness — <span id="toneBrightnessVal">0</span></label>
+          <input type="range" id="toneBrightness" min="-100" max="100" value="0" />
+        </div>
+        <div class="field">
+          <label for="toneContrast">Contrast — <span id="toneContrastVal">0</span></label>
+          <input type="range" id="toneContrast" min="-100" max="100" value="0" />
+        </div>
+        <div class="field">
+          <label for="tonePosterize">Posterize — <span id="tonePosterizeVal">Off</span></label>
+          <input type="range" id="tonePosterize" min="0" max="10" value="0" />
+        </div>
+        <div class="field">
+          <label for="toneThreshold">Threshold silhouette — <span id="toneThresholdVal">Off</span></label>
+          <input type="range" id="toneThreshold" min="0" max="255" value="0" />
+        </div>
+        <div class="field">
+          <label for="toneBlur">Squint (gaussian blur) — <span id="toneBlurVal">0</span>px</label>
+          <input type="range" id="toneBlur" min="0" max="50" value="0" />
+        </div>
+        <hr class="rule" />
+        <button class="btn btn--block" id="btnPenArt">
+          <svg viewBox="0 0 24 24"><path d="M4 18 15 7l2 2-11 11H4v-2Z M14 4l2-2 4 4-2 2Z"/></svg>
+          <span>Convert to pen art</span>
+        </button>
+        <p class="hint-text">Traces edges into a sketchy ink-line study — good for gesture and contour drills. Toggles off the tonal filters above while active.</p>
+        <hr class="rule" />
+        <div class="field">
+          <label>Color loupe</label>
+          <div class="loupe-readout" id="loupeReadout">
+            <span class="loupe-swatch" id="loupeSwatch"></span>
+            <span id="loupeValues">click the image with the eyedropper tool</span>
+          </div>
+          <div class="swatch-pins" id="swatchPins"></div>
+        </div>
+      </section>
+
+      <!-- ---- TAB C: PAPER CALIBRATION ---- -->
+      <section class="ipanel" id="panel-paper" role="tabpanel">
+        <div class="field-row">
+          <div class="field">
+            <label for="paperWidth">Paper width</label>
+            <input type="number" id="paperWidth" min="1" step="0.1" value="9" />
+          </div>
+          <div class="field">
+            <label for="paperHeight">Paper height</label>
+            <input type="number" id="paperHeight" min="1" step="0.1" value="12" />
+          </div>
+          <div class="field field--narrow">
+            <label for="paperUnit">Unit</label>
+            <select id="paperUnit">
+              <option value="in">in</option>
+              <option value="cm">cm</option>
+              <option value="mm">mm</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Preset canvas sizes</label>
+          <select id="paperPreset">
+            <option value="">Custom…</option>
+            <option value="9x12in">9 × 12 in (Strathmore)</option>
+            <option value="11x14in">11 × 14 in</option>
+            <option value="16x20in">16 × 20 in</option>
+            <option value="a4">A4</option>
+            <option value="a3">A3</option>
+            <option value="1x1">1:1 square</option>
+            <option value="4x5">4:5</option>
+            <option value="3x2">3:2</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="paperMarginTB">Margin top/bottom</label>
+            <input type="number" id="paperMarginTB" min="0" step="0.1" value="0.5" />
+          </div>
+          <div class="field">
+            <label for="paperMarginLR">Margin left/right</label>
+            <input type="number" id="paperMarginLR" min="0" step="0.1" value="0.5" />
+          </div>
+        </div>
+        <div class="calc-card" id="paperCalc">
+          <p class="calc-card__title">Marking guide</p>
+          <p class="calc-card__line">Draw vertical lines every <strong id="calcDx">—</strong> along the top edge.</p>
+          <p class="calc-card__line">Draw horizontal lines every <strong id="calcDy">—</strong> along the side edge.</p>
+          <p class="calc-card__note" id="calcNote"></p>
+        </div>
+        <button class="btn btn--block" id="btnExportBlankGrid">
+          <svg viewBox="0 0 24 24"><path d="M4 2h11l5 5v15H4V2Z M15 2v5h5"/></svg>
+          <span>Export blank grid (PDF)</span>
+        </button>
+      </section>
+
+      <!-- ---- TAB D: MEASUREMENTS & SWATCHES ---- -->
+      <section class="ipanel" id="panel-measure" role="tabpanel">
+        <div class="field">
+          <label>Caliper readings</label>
+          <ul class="measure-list" id="caliperList"><li class="measure-empty">No measurements yet — select the caliper tool and click two points.</li></ul>
+        </div>
+        <hr class="rule" />
+        <div class="field">
+          <label>Plumb lines</label>
+          <ul class="measure-list" id="plumbList"><li class="measure-empty">Select the plumb line tool and click on the image to drop a guide.</li></ul>
+          <button class="btn btn--ghost btn--block" id="btnClearPlumb">Clear all plumb lines</button>
+        </div>
+        <hr class="rule" />
+        <div class="field">
+          <label>Angle readings</label>
+          <ul class="measure-list" id="angleList"><li class="measure-empty">Select the angle tool and click three points: A, vertex B, C.</li></ul>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- ============ STATUS BAR ============ -->
+  <footer class="statusbar">
+    <span id="statusHint">Import an image to begin.</span>
+    <span class="statusbar__spacer"></span>
+    <span id="statusRes">— × — px</span>
+    <span id="statusZoom">zoom 100%</span>
+    <span id="statusPos">x — · y —</span>
+    <button class="link-btn statusbar__shortcuts" id="btnShortcutsInline">shortcuts</button>
+  </footer>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="modalOverlay" hidden>
+
+  <div class="modal" id="modalRecent" hidden aria-labelledby="modalRecentTitle" role="dialog">
+    <div class="modal__head">
+      <h2 id="modalRecentTitle">Recent references</h2>
+      <button class="icon-btn" data-close-modal aria-label="Close">✕</button>
+    </div>
+    <div class="modal__body">
+      <div class="recent-grid" id="recentGrid"><p class="hint-text">Images you've worked on stay stored on this device — nothing is uploaded.</p></div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalExport" hidden aria-labelledby="modalExportTitle" role="dialog">
+    <div class="modal__head">
+      <h2 id="modalExportTitle">Export</h2>
+      <button class="icon-btn" data-close-modal aria-label="Close">✕</button>
+    </div>
+    <div class="modal__body export-options">
+      <button class="export-opt" id="exportPNG">
+        <strong>Reference + grid (PNG)</strong>
+        <span>Full-resolution image with the current overlay burned in</span>
+      </button>
+      <button class="export-opt" id="exportBlankPDF">
+        <strong>Blank grid (PDF)</strong>
+        <span>Printable, paper-matched grid with coordinate labels</span>
+      </button>
+      <button class="export-opt" id="exportJSON">
+        <strong>Project file (.json)</strong>
+        <span>Save grid, tone, and calibration settings to reload later</span>
+      </button>
+      <label class="export-opt" for="importJSON">
+        <strong>Load project file…</strong>
+        <span>Restore a previously saved .json project</span>
+      </label>
+      <input type="file" id="importJSON" accept="application/json" hidden />
+    </div>
+  </div>
+
+  <div class="modal" id="modalHelp" hidden aria-labelledby="modalHelpTitle" role="dialog">
+    <div class="modal__head">
+      <h2 id="modalHelpTitle">Keyboard shortcuts</h2>
+      <button class="icon-btn" data-close-modal aria-label="Close">✕</button>
+    </div>
+    <div class="modal__body">
+      <table class="shortcut-table">
+        <tbody>
+          <tr><td><kbd>Space</kbd> + drag</td><td>Pan viewport</td></tr>
+          <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Zoom in / out</td></tr>
+          <tr><td><kbd>0</kbd></td><td>Reset zoom &amp; fit to screen</td></tr>
+          <tr><td><kbd>H</kbd></td><td>Flip horizontally</td></tr>
+          <tr><td><kbd>V</kbd></td><td>Flip vertically (upside-down mode)</td></tr>
+          <tr><td><kbd>G</kbd></td><td>Toggle grid visibility</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Toggle grayscale</td></tr>
+          <tr><td><kbd>P</kbd></td><td>Cycle posterize levels</td></tr>
+          <tr><td><kbd>T</kbd></td><td>Toggle threshold silhouette</td></tr>
+          <tr><td><kbd>C</kbd></td><td>Caliper tool</td></tr>
+          <tr><td><kbd>L</kbd></td><td>Plumb line tool</td></tr>
+          <tr><td><kbd>E</kbd></td><td>Open export menu</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

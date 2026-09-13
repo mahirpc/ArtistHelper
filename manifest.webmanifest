@@ -1,0 +1,17 @@
+{
+  "name": "ArtRef Studio — Grid & Reference Drawing Assistant",
+  "short_name": "ArtRef Studio",
+  "description": "A privacy-first, offline-capable drawing reference tool: grids, value studies, sighting tools, and paper calibration — all client-side.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1b1a18",
+  "theme_color": "#1b1a18",
+  "categories": ["art", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
