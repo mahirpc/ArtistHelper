@@ -5,6 +5,31 @@ import { calibrate, formatLength, convert, PRESETS } from "./paper-calibration.j
 import { exportReferencePNG, exportBlankGridPDF, exportProjectJSON, importProjectJSON } from "./export.js";
 import { Storage, makeId } from "./storage.js";
 
+// ---------------------------------------------------------------------------
+// Safety net: surface any unexpected error visibly instead of failing silently.
+// Registered first, before anything else can throw.
+// ---------------------------------------------------------------------------
+function showFatalBanner(message) {
+  let banner = document.getElementById("fatalBanner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "fatalBanner";
+    banner.className = "fatal-banner";
+    banner.innerHTML = `<strong>Something went wrong:</strong> <code id="fatalBannerMsg"></code><button type="button">Dismiss</button>`;
+    banner.querySelector("button").addEventListener("click", () => banner.remove());
+    document.body.prepend(banner);
+  }
+  banner.querySelector("#fatalBannerMsg").textContent = message;
+}
+window.addEventListener("error", (e) => {
+  console.error("Uncaught error:", e.error || e.message);
+  showFatalBanner((e.error && e.error.message) || e.message || "an unknown error occurred");
+});
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("Unhandled promise rejection:", e.reason);
+  showFatalBanner((e.reason && e.reason.message) || String(e.reason));
+});
+
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -31,6 +56,12 @@ let currentProjectId = null;
 let currentImageName = "reference";
 let currentImageBlob = null;
 let spaceHeld = false;
+// Declared up-front (not just where first used) because setTool("pan") below
+// runs at module-init time and calls removeCropToolbar(), which reads these —
+// a `let` declared later would still be in the temporal dead zone at that point.
+let dragState = null;
+let cropRect = null; // {x,y,w,h} normalized, in progress or committed-pending
+let cropToolbarEl = null;
 
 function showToast(msg, ms = 2600) {
   toast.textContent = msg;
@@ -193,7 +224,9 @@ function syncGridFromUI() {
 }
 Object.values(gridEls).forEach(el => el.addEventListener("input", syncGridFromUI));
 $$(".chip").forEach(chip => chip.addEventListener("click", () => { gridEls.color.value = chip.dataset.color; syncGridFromUI(); }));
-syncGridFromUI();
+// Note: the initial sync call is deferred to the bottom of this file — it
+// transitively calls refreshPaperCalc(), which needs `paperEls` (declared
+// further down, in the Paper Calibration section) to already exist.
 
 // ===========================================================================
 // TONE PANEL
@@ -221,7 +254,7 @@ function syncToneFromUI() {
   scheduleAutoSave();
 }
 Object.values(toneEls).forEach(el => el.addEventListener("input", syncToneFromUI));
-syncToneFromUI();
+// initial sync deferred to the bottom of this file, alongside syncGridFromUI()
 
 $("#btnPenArt").addEventListener("click", () => {
   engine.filters.penArt = !engine.filters.penArt;
@@ -299,10 +332,6 @@ function renderPins() {
 // ===========================================================================
 // POINTER INTERACTION (pan / crop / caliper / plumb / angle / loupe)
 // ===========================================================================
-let dragState = null;
-let cropRect = null; // {x,y,w,h} normalized, in progress or committed-pending
-let cropToolbarEl = null;
-
 function removeCropToolbar() {
   cropToolbarEl?.remove(); cropToolbarEl = null;
   $(".crop-box")?.remove();
@@ -661,8 +690,15 @@ async function doAutoSave() {
 
 $("#btnRecent").addEventListener("click", async () => {
   openModal("modalRecent");
-  const items = await Storage.listRecent();
   const grid = $("#recentGrid");
+  let items = [];
+  try {
+    items = await Storage.listRecent();
+  } catch (err) {
+    console.warn("Recent list unavailable:", err);
+    grid.innerHTML = `<p class="hint-text">On-device storage isn't available in this browser context (this can happen in private browsing, or when the page is opened directly from a file instead of a server). Everything else still works — recent references just won't be remembered.</p>`;
+    return;
+  }
   if (!items.length) { grid.innerHTML = `<p class="hint-text">Nothing saved yet — images you work on are stored on this device automatically.</p>`; return; }
   grid.innerHTML = "";
   items.forEach(item => {
@@ -671,14 +707,19 @@ $("#btnRecent").addEventListener("click", async () => {
     const url = URL.createObjectURL(item.thumbBlob);
     el.innerHTML = `<img src="${url}" alt="" /><div class="recent-item__meta"><span class="recent-item__name">${item.name}</span><br/><span class="recent-item__date">${new Date(item.updatedAt).toLocaleDateString()}</span></div>`;
     el.addEventListener("click", async () => {
-      const img = await blobToImage(item.imageBlob);
-      currentImageBlob = item.imageBlob;
-      currentImageName = item.name;
-      currentProjectId = item.id;
-      await engine.loadImage(img);
-      applyProjectState(item.projectState);
-      setEmptyState(false);
-      closeModals();
+      try {
+        const img = await blobToImage(item.imageBlob);
+        currentImageBlob = item.imageBlob;
+        currentImageName = item.name;
+        currentProjectId = item.id;
+        await engine.loadImage(img);
+        applyProjectState(item.projectState);
+        setEmptyState(false);
+        closeModals();
+      } catch (err) {
+        showToast("Couldn't reload that reference — it may be corrupted.");
+        console.warn(err);
+      }
     });
     grid.appendChild(el);
   });
@@ -748,4 +789,9 @@ window.addEventListener("beforeunload", () => {
   Storage.setPrefs({ gridConfig: engine.gridConfig });
 });
 
+// Deferred from the Grid/Tone panel sections above — see the notes there.
+// By this point every section (including Paper Calibration's `paperEls`)
+// has been declared, so it's safe to run the full sync chain.
+syncGridFromUI();
+syncToneFromUI();
 engine.requestRender();
