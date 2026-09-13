@@ -435,6 +435,22 @@ kbd { font-family: var(--font-mono); background: var(--panel-raised); border: 1p
 }
 .toast[hidden] { display: none; }
 
+.fatal-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: #4a2420; color: #f6dfd3;
+  border-bottom: 1px solid var(--accent);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12.5px;
+}
+.fatal-banner strong { font-weight: 600; }
+.fatal-banner code { font-family: var(--font-mono); font-size: 11px; opacity: 0.85; }
+.fatal-banner button {
+  margin-left: auto; background: transparent; border: 1px solid rgba(246,223,211,0.4);
+  color: inherit; border-radius: var(--radius-sm); padding: 3px 10px; cursor: pointer; flex: none;
+}
+.fatal-banner[hidden] { display: none; }
+
 /* ==========================================================================
    Responsive
    ========================================================================== */
