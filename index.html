@@ -56,8 +56,12 @@
         <svg viewBox="0 0 24 24"><path d="M12 7v5l3 3M12 3a9 9 0 1 0 9 9"/></svg>
         <span>Recent</span>
       </button>
-      <button class="btn" id="btnExport">
+      <button class="btn btn--accent" id="btnDownload" title="Download the image with your grid and adjustments (PNG)">
         <svg viewBox="0 0 24 24"><path d="M12 15V3m0 12-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span>Download</span>
+      </button>
+      <button class="btn" id="btnExport">
+        <svg viewBox="0 0 24 24"><path d="M4 2h11l5 5v15H4V2Z M15 2v5h5"/></svg>
         <span>Export</span>
       </button>
       <button class="icon-btn" id="btnHelp" title="Keyboard shortcuts &amp; help" aria-label="Help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.5 1-1.5 2.2M12 17.5h.01"/></svg></button>
@@ -319,6 +323,7 @@
         </div>
       </section>
     </aside>
+    <button class="inspector-backdrop" id="inspectorBackdrop" aria-label="Close menu" hidden></button>
   </div>
 
   <!-- ============ STATUS BAR ============ -->
@@ -347,14 +352,11 @@
 
   <div class="modal" id="modalExport" hidden aria-labelledby="modalExportTitle" role="dialog">
     <div class="modal__head">
-      <h2 id="modalExportTitle">Export</h2>
+      <h2 id="modalExportTitle">More export options</h2>
       <button class="icon-btn" data-close-modal aria-label="Close">✕</button>
     </div>
     <div class="modal__body export-options">
-      <button class="export-opt" id="exportPNG">
-        <strong>Reference + grid (PNG)</strong>
-        <span>Full-resolution image with the current overlay burned in</span>
-      </button>
+      <p class="hint-text" style="margin-top:0">Looking to save the image itself? Use the <strong>Download</strong> button in the header — it's one click. The options below are for printing a blank grid or saving/restoring your settings.</p>
       <button class="export-opt" id="exportBlankPDF">
         <strong>Blank grid (PDF)</strong>
         <span>Printable, paper-matched grid with coordinate labels</span>
@@ -390,7 +392,8 @@
           <tr><td><kbd>T</kbd></td><td>Toggle threshold silhouette</td></tr>
           <tr><td><kbd>C</kbd></td><td>Caliper tool</td></tr>
           <tr><td><kbd>L</kbd></td><td>Plumb line tool</td></tr>
-          <tr><td><kbd>E</kbd></td><td>Open export menu</td></tr>
+          <tr><td><kbd>E</kbd></td><td>Open the export options (PDF / project file)</td></tr>
+          <tr><td><kbd>D</kbd></td><td>Download the image with your grid (PNG)</td></tr>
         </tbody>
       </table>
     </div>
