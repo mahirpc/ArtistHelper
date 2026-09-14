@@ -1,8 +1,16 @@
-// service-worker.js — offline app shell via stale-while-revalidate.
+// service-worker.js — offline app shell.
 // Scope-relative throughout so this works whether GitHub Pages serves the
 // site from the domain root or from a /<repo-name>/ subpath.
+//
+// Strategy split on purpose: HTML/CSS/JS are the app's actual *code*, so they
+// use network-first — always get the latest deploy when online, and only
+// fall back to the cache when the network fails (offline). Serving a stale
+// cached JS file next to a fresh HTML file (or vice versa) is exactly the
+// kind of mismatch that produces confusing "it worked yesterday" bugs, so
+// code is never allowed to go stale silently. Icons rarely change and carry
+// no correctness risk, so those stay cache-first for speed.
 
-const CACHE_VERSION = "artref-v1";
+const CACHE_VERSION = "artref-v2";
 const SCOPE = self.registration ? self.registration.scope : self.location.href;
 
 const APP_SHELL = [
@@ -22,6 +30,11 @@ const APP_SHELL = [
   "icons/icon-512.png",
   "icons/icon-maskable-512.png",
 ].map((p) => new URL(p, SCOPE).toString());
+
+const CODE_EXTENSIONS = [".html", ".js", ".css", ".webmanifest", ".json"];
+function isAppCode(pathname) {
+  return pathname === "/" || pathname.endsWith("/") || CODE_EXTENSIONS.some((ext) => pathname.endsWith(ext));
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -43,6 +56,27 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // let CDN requests (jsPDF, fonts) hit the network directly
 
+  if (req.mode === "navigate" || isAppCode(url.pathname)) {
+    // Network-first: never serve stale app code while online.
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.status === 200) {
+            const copy = res.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() =>
+          caches.open(CACHE_VERSION).then(async (cache) =>
+            (await cache.match(req)) || (await cache.match(new URL("index.html", SCOPE).toString()))
+          )
+        )
+    );
+    return;
+  }
+
+  // Static assets (icons): cache-first, refresh in the background.
   event.respondWith(
     caches.open(CACHE_VERSION).then(async (cache) => {
       const cached = await cache.match(req);
@@ -51,7 +85,7 @@ self.addEventListener("fetch", (event) => {
           if (res && res.status === 200) cache.put(req, res.clone());
           return res;
         })
-        .catch(() => cached || caches.match(new URL("index.html", SCOPE).toString()));
+        .catch(() => cached);
       return cached || network;
     })
   );
