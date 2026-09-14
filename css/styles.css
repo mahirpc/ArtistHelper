@@ -84,6 +84,7 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   display: grid;
   grid-template-columns: var(--toolbox-w) 1fr var(--inspector-w);
   min-height: 0;
+  min-width: 0;
 }
 
 /* ==========================================================================
@@ -95,6 +96,7 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   padding: 0 14px;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
+  min-width: 0;
 }
 .header__brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .header__mark { width: 22px; height: 22px; fill: none; stroke: var(--accent-hi); stroke-width: 1.6; flex: none; }
@@ -216,6 +218,7 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   color: var(--text-dim);
   pointer-events: none;
 }
+.empty-state[hidden] { display: none; }
 .empty-state * { pointer-events: auto; }
 .empty-state svg { width: 84px; height: 84px; fill: none; stroke: var(--text-faint); stroke-width: 1.1; }
 .empty-state p { margin: 0; max-width: 360px; }
@@ -242,6 +245,7 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   pointer-events: none;
   backdrop-filter: blur(2px);
 }
+.hud[hidden] { display: none; }
 
 /* ==========================================================================
    Inspector (right sidebar)
@@ -367,6 +371,8 @@ input[type="color"]::-webkit-color-swatch { border: none; border-radius: 2px; }
   font-family: var(--font-mono);
   font-size: 10.5px;
   color: var(--text-faint);
+  min-width: 0;
+  overflow: hidden;
 }
 .statusbar__spacer { flex: 1; }
 .statusbar__shortcuts { font-family: var(--font-mono); font-size: 10.5px; }
@@ -472,5 +478,11 @@ kbd { font-family: var(--font-mono); background: var(--panel-raised); border: 1p
     box-shadow: -8px 0 24px rgba(0,0,0,0.4);
   }
   .inspector.is-open { transform: translateX(0); }
+  .inspector-backdrop {
+    position: fixed; top: var(--header-h); bottom: var(--status-h); left: 0; right: 0;
+    z-index: 49; border: none; padding: 0; margin: 0;
+    background: rgba(10,9,8,0.55);
+  }
+  .inspector-backdrop[hidden] { display: none; }
   .statusbar span:not(#statusHint):not(.statusbar__shortcuts) { display: none; }
 }
