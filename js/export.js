@@ -11,6 +11,7 @@ function loadJsPDF() {
     if (window.jspdf) { resolve(window.jspdf.jsPDF); return; }
     const script = document.createElement("script");
     script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js";
+    script.crossOrigin = "anonymous"; // cdnjs serves CORS headers — get real stack traces, not opaque "Script error."
     script.onload = () => resolve(window.jspdf.jsPDF);
     script.onerror = () => reject(new Error("Could not load the PDF export library — check your connection."));
     document.head.appendChild(script);
