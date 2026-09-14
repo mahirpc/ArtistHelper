@@ -9,7 +9,7 @@ import { Storage, makeId } from "./storage.js";
 // Safety net: surface any unexpected error visibly instead of failing silently.
 // Registered first, before anything else can throw.
 // ---------------------------------------------------------------------------
-function showFatalBanner(message) {
+function showFatalBanner(message, detail) {
   let banner = document.getElementById("fatalBanner");
   if (!banner) {
     banner = document.createElement("div");
@@ -19,11 +19,22 @@ function showFatalBanner(message) {
     banner.querySelector("button").addEventListener("click", () => banner.remove());
     document.body.prepend(banner);
   }
-  banner.querySelector("#fatalBannerMsg").textContent = message;
+  const shown = detail ? `${message} ${detail}` : message;
+  banner.querySelector("#fatalBannerMsg").textContent = shown;
 }
 window.addEventListener("error", (e) => {
-  console.error("Uncaught error:", e.error || e.message);
-  showFatalBanner((e.error && e.error.message) || e.message || "an unknown error occurred");
+  console.error("Uncaught error:", e.error || e.message, e.filename, e.lineno, e.colno);
+  const isOpaque = !e.error && (!e.message || e.message === "Script error." || e.message === "Script error");
+  if (isOpaque) {
+    // No stack/filename means the browser redacted it — this happens for errors
+    // thrown inside a script loaded from a different origin without CORS
+    // (e.g. a CDN library), not for this app's own same-origin code. It's
+    // almost always harmless noise from a third-party script, not a crash here.
+    console.warn("Redacted cross-origin script error (likely a third-party script, not this app's own code).");
+    return;
+  }
+  const loc = e.filename ? ` (${e.filename.split("/").pop()}:${e.lineno}:${e.colno})` : "";
+  showFatalBanner((e.error && e.error.message) || e.message || "an unknown error occurred", loc);
 });
 window.addEventListener("unhandledrejection", (e) => {
   console.error("Unhandled promise rejection:", e.reason);
