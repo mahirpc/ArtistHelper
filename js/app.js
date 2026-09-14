@@ -185,11 +185,26 @@ $("#btnGray").addEventListener("click", () => {
   $("#btnGray").classList.toggle("is-active", engine.filters.grayscale);
   engine.requestRender(); scheduleAutoSave();
 });
+function setInspectorOpen(open) {
+  $("#inspector").classList.toggle("is-open", open);
+  $("#inspectorBackdrop").hidden = !open;
+  $("#btnToggleToolbox").setAttribute("aria-expanded", String(open));
+}
 $("#btnToggleToolbox").addEventListener("click", () => {
+  // On narrow screens the toolbox already fits alongside the canvas, and the
+  // inspector (Grid/Tone/Paper/Measure) is the panel that's off-screen by
+  // default — so the "menu" people expect the hamburger to open is that one.
+  // On wider screens the inspector is always visible, so the hamburger's job
+  // goes back to reclaiming space by collapsing the tool rail.
+  if (window.innerWidth <= 700) {
+    setInspectorOpen(!$("#inspector").classList.contains("is-open"));
+    return;
+  }
   const wa = $(".workarea");
   wa.classList.toggle("toolbox-collapsed");
   $("#btnToggleToolbox").setAttribute("aria-expanded", String(!wa.classList.contains("toolbox-collapsed")));
 });
+$("#inspectorBackdrop").addEventListener("click", () => setInspectorOpen(false));
 
 // ===========================================================================
 // GRID PANEL
@@ -479,7 +494,7 @@ $$(".itab").forEach(tab => tab.addEventListener("click", () => {
   tab.classList.add("is-active");
   $("#" + tab.dataset.panel).classList.add("is-active");
   if (tab.dataset.panel === "panel-measure") renderMeasureLists();
-  if (window.innerWidth <= 700) $("#inspector").classList.add("is-open");
+  if (window.innerWidth <= 700) setInspectorOpen(true);
 }));
 
 // ===========================================================================
@@ -583,7 +598,7 @@ $("#btnExport").addEventListener("click", () => openModal("modalExport"));
 $("#btnHelp").addEventListener("click", () => openModal("modalHelp"));
 $("#btnShortcutsInline").addEventListener("click", () => openModal("modalHelp"));
 
-$("#exportPNG").addEventListener("click", () => {
+function downloadReferencePNG() {
   if (!engine.hasImage()) { showToast("Import an image first."); return; }
   exportReferencePNG({
     glPipeline: gl, gridConfig: engine.gridConfig, filters: engine.filters,
@@ -591,8 +606,10 @@ $("#exportPNG").addEventListener("click", () => {
     filename: `${currentImageName}-artref.png`,
   });
   engine.requestRender();
-  closeModals();
-});
+  showToast("Downloading full-resolution PNG…");
+}
+$("#btnDownload").addEventListener("click", downloadReferencePNG);
+
 async function doExportBlankPDF() {
   try {
     await exportBlankGridPDF({ gridConfig: engine.gridConfig, paper: currentPaper(), filename: `${currentImageName}-blank-grid.pdf` });
@@ -751,7 +768,8 @@ window.addEventListener("keydown", (e) => {
     case "c": case "C": setTool("caliper"); break;
     case "l": case "L": setTool("plumb"); break;
     case "e": case "E": openModal("modalExport"); break;
-    case "Escape": closeModals(); removeCropToolbar(); break;
+    case "d": case "D": downloadReferencePNG(); break;
+    case "Escape": closeModals(); removeCropToolbar(); setInspectorOpen(false); break;
   }
 });
 window.addEventListener("keyup", (e) => { if (e.code === "Space") { spaceHeld = false; stage.classList.remove("tool-pan"); } });
