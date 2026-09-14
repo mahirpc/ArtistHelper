@@ -98,13 +98,13 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   border-bottom: 1px solid var(--line);
   min-width: 0;
 }
-.header__brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.header__brand { display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden; }
 .header__mark { width: 22px; height: 22px; fill: none; stroke: var(--accent-hi); stroke-width: 1.6; flex: none; }
-.header__title { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
-.header__name { font-weight: 600; font-size: 14.5px; letter-spacing: 0.01em; white-space: nowrap; }
-.header__tag { font-size: 10.5px; color: var(--text-faint); font-family: var(--font-mono); white-space: nowrap; }
-.header__actions { display: flex; align-items: center; gap: 8px; }
-.header__quick { display: flex; align-items: center; gap: 2px; padding: 0 4px; border-left: 1px solid var(--line); border-right: 1px solid var(--line); margin: 0 2px; }
+.header__title { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; overflow: hidden; }
+.header__name { font-weight: 600; font-size: 14.5px; letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header__tag { font-size: 10.5px; color: var(--text-faint); font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header__actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.header__quick { display: flex; align-items: center; gap: 2px; padding: 0 4px; border-left: 1px solid var(--line); border-right: 1px solid var(--line); margin: 0 2px; flex: none; }
 
 /* ==========================================================================
    Buttons
@@ -465,6 +465,12 @@ kbd { font-family: var(--font-mono); background: var(--panel-raised); border: 1p
   .header__tag { display: none; }
   .btn span { display: none; }
   .btn { padding: 7px; }
+}
+
+@media (max-width: 460px) {
+  .header { gap: 8px; padding: 0 8px; }
+  .header__actions { gap: 4px; }
+  .header__quick { display: none; }
 }
 
 @media (max-width: 700px) {
